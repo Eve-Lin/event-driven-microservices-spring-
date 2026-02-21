@@ -1,0 +1,15 @@
+# IDE
+.idea/
+*.iml
+
+HELP.md
+
+# Maven
+target/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+.env.properties
