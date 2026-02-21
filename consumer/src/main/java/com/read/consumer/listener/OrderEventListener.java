@@ -17,13 +17,15 @@ public class OrderEventListener {
     @KafkaListener(topics = "orders.events")
     public void handleOrderCreated(OrderCreatedEvent event, Acknowledgment ack) {
 
-        OrderView view = new OrderView();
-        view.setOrderId(event.getOrderId());
-        view.setCustomerId(event.getCustomerId());
-        view.setTotalAmount(event.getTotalAmount());
-        view.setStatus("CREATED");
+        if (!repository.existsById(event.getOrderId())) {
+            OrderView view = new OrderView();
+            view.setOrderId(event.getOrderId());
+            view.setCustomerId(event.getCustomerId());
+            view.setTotalAmount(event.getTotalAmount());
+            view.setStatus("CREATED");
 
-        repository.save(view);
+            repository.save(view);
+        }
         ack.acknowledge();   //commiting offset after successful DB write
     }
 }
