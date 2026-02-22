@@ -3,6 +3,7 @@ package com.read.consumer.listener;
 import com.read.consumer.entity.OrderView;
 import com.read.consumer.event.OrderCreatedEvent;
 import com.read.consumer.repository.OrderViewRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -15,6 +16,7 @@ public class OrderEventListener {
     private final OrderViewRepository repository;
 
     @KafkaListener(topics = "orders.events")
+    @CircuitBreaker(name = "orderViewBreaker")
     public void handleOrderCreated(OrderCreatedEvent event, Acknowledgment ack) {
 
         if (!repository.existsById(event.getOrderId())) {

@@ -1,5 +1,7 @@
 package com.read.consumer.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.config.validate.ValidationException;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Headers;
 
@@ -10,6 +12,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.BackOff;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.nio.charset.StandardCharsets;
@@ -20,7 +23,7 @@ import java.time.Instant;
 public class KafkaErrorConfig {
 
     @Bean
-    public DefaultErrorHandler errorHandler(KafkaTemplate<Object, Object> template) {
+    public DefaultErrorHandler errorHandler(KafkaTemplate<Object, Object> template, MeterRegistry meterRegistry) {
 
         DeadLetterPublishingRecoverer recoverer =
                 new DeadLetterPublishingRecoverer(template,
@@ -50,8 +53,26 @@ public class KafkaErrorConfig {
             return headers;
         });
 
-        FixedBackOff backOff = new FixedBackOff(1000L, 3);
+//        FixedBackOff backOff = new FixedBackOff(1000L, 3);
+        BackOff backOff = new ExponentialBackOffWithJitter(
+                1000L,   // initial - 1s
+                2.0,     // multiplier
+                10000L,  // max interval - 10s
+                3        // retries
+        );
+        DefaultErrorHandler errorHandler =
+                new DefaultErrorHandler(recoverer, backOff);
 
-        return new DefaultErrorHandler(recoverer, backOff);
+        errorHandler.addNotRetryableExceptions(
+                IllegalArgumentException.class,
+                ValidationException.class
+        );
+
+        errorHandler.setRetryListeners((record, ex, deliveryAttempt) -> {
+            if (deliveryAttempt > 1) {
+                meterRegistry.counter("kafka.retry.attempts").increment();
+            }
+        });
+        return errorHandler;
     }
 }
