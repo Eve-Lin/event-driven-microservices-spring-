@@ -2,7 +2,12 @@ global:
   scrape_interval: 5s
 
 scrape_configs:
-  - job_name: 'spring-app'
+  - job_name: 'consumer-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['host.docker.internal:8000']
+
+  - job_name: 'command-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'host.docker.internal:8080' ]
