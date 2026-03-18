@@ -4,6 +4,7 @@ import com.world.shop.dto.CreateOrderRequest;
 import com.world.shop.dto.CreatedOrderResponse;
 import com.world.shop.entity.Order;
 import com.world.shop.service.OrderService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ public class OrderController {
     private final OrderService service;
 
     @PostMapping
+    @RateLimiter(name = "orderRateLimiter")
     public ResponseEntity<CreatedOrderResponse> create(@RequestBody CreateOrderRequest request) {
         Order order = service.createOrder(request.getCustomerId(), request.getTotalAmount());
         return ResponseEntity
