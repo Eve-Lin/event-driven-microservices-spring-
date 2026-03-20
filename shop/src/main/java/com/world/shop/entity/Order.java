@@ -20,5 +20,6 @@ public class Order {
 
     private String customerId;
     private Double totalAmount;
+    private String customerEmail;
     private String status;
 }

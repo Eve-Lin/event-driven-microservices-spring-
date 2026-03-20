@@ -36,6 +36,7 @@ public class OrderEventListener {
             view.setOrderId(event.getOrderId());
             view.setCustomerId(event.getCustomerId());
             view.setTotalAmount(event.getTotalAmount());
+            view.setCustomerEmail(event.getCustomerEmail());
             view.setStatus("CREATED");
 
             Timer.Sample sample = Timer.start();

@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class CreateOrderRequest {
     private String customerId;
     private Double totalAmount;
+    private String customerEmail;
 }

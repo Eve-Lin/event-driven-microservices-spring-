@@ -25,11 +25,13 @@ public class OrderEventListener {
 
 
         OrderNotificationEvent orderNotificationEvent = OrderNotificationEvent.builder()
-                        .orderId(event.getOrderId())
-                                .message("Order Created")
-                                        .customerId(event.getCustomerId())
-                                                .createdAt(event.getCreatedAt())
-                                                        .build();
+                .orderId(event.getOrderId())
+                .message("Order Created")
+                .customerId(event.getCustomerId())
+                .createdAt(event.getCreatedAt())
+                .totalAmount(event.getTotalAmount())
+                .customerEmail(event.getCustomerEmail())
+                .build();
         notificationService.handleEvent(orderNotificationEvent);
         ack.acknowledge();
     }

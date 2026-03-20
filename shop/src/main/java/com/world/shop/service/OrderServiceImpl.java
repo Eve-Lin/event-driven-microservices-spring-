@@ -32,12 +32,13 @@ public class OrderServiceImpl implements OrderService{
                 .register(registry);
     }
 
-    public Order createOrder(String customerId, Double totalAmount) {
+    public Order createOrder(String customerId, Double totalAmount, String customerEmail) {
 
         Order order = new Order(
                 UUID.randomUUID().toString(),
                 customerId,
                 totalAmount,
+                customerEmail,
                 "CREATED"
         );
 
@@ -52,8 +53,10 @@ public class OrderServiceImpl implements OrderService{
                 order.getId(),
                 order.getCustomerId(),
                 order.getTotalAmount(),
+                order.getCustomerEmail(),
                 Instant.now()
         );
+        System.out.println("The event email is: " + event.getCustomerEmail());
 
         kafkaTemplate.send("orders.events", order.getId(), event);
 

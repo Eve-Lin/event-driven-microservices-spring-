@@ -16,5 +16,6 @@ public class OrderCreatedEvent {
     private String orderId;
     private String customerId;
     private Double totalAmount;
+    private String customerEmail;
     private Instant createdAt;
 }

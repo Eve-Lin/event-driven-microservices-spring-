@@ -29,4 +29,8 @@ public class Notification {
     private String status;
 
     private Instant createdAt;
+
+    private Double totalAmount;
+
+    private String customerEmail;
 }

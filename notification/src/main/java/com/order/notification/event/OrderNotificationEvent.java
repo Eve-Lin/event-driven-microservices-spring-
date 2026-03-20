@@ -13,6 +13,8 @@ public class OrderNotificationEvent {
 
     private String orderId;
     private String customerId;
-    private String message; // computed locally
+    private String message;
+    private Double totalAmount;
+    private String customerEmail;
     private Instant createdAt;
 }

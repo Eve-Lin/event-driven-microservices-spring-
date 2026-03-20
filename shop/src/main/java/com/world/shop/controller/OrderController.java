@@ -22,7 +22,7 @@ public class OrderController {
     @PostMapping
     @RateLimiter(name = "orderRateLimiter")
     public ResponseEntity<CreatedOrderResponse> create(@RequestBody CreateOrderRequest request) {
-        Order order = service.createOrder(request.getCustomerId(), request.getTotalAmount());
+        Order order = service.createOrder(request.getCustomerId(), request.getTotalAmount(), request.getCustomerEmail());
         return ResponseEntity
                 .ok(new CreatedOrderResponse(order.getId(), order.getStatus()));
     }
