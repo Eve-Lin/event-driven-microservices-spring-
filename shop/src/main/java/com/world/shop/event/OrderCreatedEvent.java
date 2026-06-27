@@ -11,9 +11,11 @@ import java.time.Instant;
 @NoArgsConstructor
 public class OrderCreatedEvent {
 
+    private String eventId;
     private String orderId;
     private String customerId;
     private Double totalAmount;
     private String customerEmail;
     private Instant createdAt;
+    private String idempotencyKey;
 }

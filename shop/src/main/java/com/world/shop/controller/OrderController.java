@@ -7,10 +7,7 @@ import com.world.shop.service.OrderService;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,9 +18,10 @@ public class OrderController {
 
     @PostMapping
     @RateLimiter(name = "orderRateLimiter")
-    public ResponseEntity<CreatedOrderResponse> create(@RequestBody CreateOrderRequest request) {
-        Order order = service.createOrder(request.getCustomerId(), request.getTotalAmount(), request.getCustomerEmail());
+    public ResponseEntity<CreatedOrderResponse> create(@RequestHeader("Idempotency-Key") String key, @RequestBody CreateOrderRequest request) {
+        System.out.println("We are in controller");
+        Order order = service.createOrderAndNotify(request.getCustomerId(), request.getTotalAmount(), request.getCustomerEmail(), key);
         return ResponseEntity
-                .ok(new CreatedOrderResponse(order.getId(), order.getStatus()));
+                .ok(new CreatedOrderResponse(order.getId(), order.getStatus(), order.getCreatedAt()));
     }
 }

@@ -4,6 +4,7 @@ import com.world.shop.dto.ErrorResponse;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -24,5 +25,13 @@ public class GlobalExceptionHandler {
                 .status(429)
                 .body(new ErrorResponse("TOO_MANY_CONCURRENT_REQUESTS",
                         "System is busy. Please retry."));
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingHeaderIdempotencyKey(MissingRequestHeaderException ex){
+        return ResponseEntity
+                .status(400)
+                .body(new ErrorResponse("MISSING_HEADER_IDEMPOTENCY_KEY",
+                        "Required request header 'Idempotency-Key' is not present"));
     }
 }

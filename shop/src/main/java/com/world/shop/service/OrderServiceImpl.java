@@ -6,14 +6,17 @@ import com.world.shop.repository.OrderRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
-public class OrderServiceImpl implements OrderService{
+public class OrderServiceImpl implements OrderService {
     private final OrderRepository repository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final MeterRegistry registry;
@@ -32,33 +35,43 @@ public class OrderServiceImpl implements OrderService{
                 .register(registry);
     }
 
-    public Order createOrder(String customerId, Double totalAmount, String customerEmail) {
+    public Order createOrderAndNotify(String customerId, Double totalAmount, String customerEmail, String key) {
 
+
+        Order order = createOrder(customerId,totalAmount, customerEmail, key);
+
+            OrderCreatedEvent event = new OrderCreatedEvent(
+                    UUID.randomUUID().toString(),
+                    Objects.nonNull(order.getId()) ? order.getId().toString() : null,
+                    order.getCustomerId(),
+                    order.getTotalAmount(),
+                    order.getCustomerEmail(),
+                    order.getCreatedAt(),
+                    key
+            );
+            kafkaTemplate.send("orders.events", order.getId().toString(), event);
+        return order;
+    }
+
+    @Transactional
+    public Order createOrder(String customerId, Double totalAmount, String customerEmail, String key) {
         Order order = new Order(
-                UUID.randomUUID().toString(),
                 customerId,
                 totalAmount,
                 customerEmail,
-                "CREATED"
+                "CREATED",
+                key
         );
-
         Timer.Sample sample = Timer.start();
         try {
-            repository.save(order);
+            order = repository.save(order);
+        } catch (DataIntegrityViolationException e) {
+            return repository.findByIdempotencyKey(key)
+                    .orElseThrow(() ->
+                            new IllegalStateException("Order exists but could not be retrieved"));
         } finally {
             sample.stop(dbSaveTimer);
         }
-
-        OrderCreatedEvent event = new OrderCreatedEvent(
-                order.getId(),
-                order.getCustomerId(),
-                order.getTotalAmount(),
-                order.getCustomerEmail(),
-                Instant.now()
-        );
-        System.out.println("The event email is: " + event.getCustomerEmail());
-
-        kafkaTemplate.send("orders.events", order.getId(), event);
 
         return order;
     }
